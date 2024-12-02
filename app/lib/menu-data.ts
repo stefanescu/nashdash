@@ -1,112 +1,163 @@
 import { MenuItem } from '../types/menu'
 
 export const menuItems: MenuItem[] = [
-  // Morning Menu Items
-  { 
-    id: 1, 
-    name: { en: 'Breakfast Burrito', es: 'Burrito de Desayuno' }, 
-    price: 8.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'morning',  // For order categorization, not availability
-    ingredients: ['Eggs', 'Cheese', 'Bacon', 'Potatoes', 'Salsa'], 
-    type: 'food' 
+  {
+    id: 1,
+    name: { 
+      en: "Nashville Hot Chicken Sandwich",
+      es: "Sándwich de Pollo Picante de Nashville"
+    },
+    description: { 
+      en: "Crispy chicken breast with our signature hot sauce",
+      es: "Pechuga de pollo crujiente con nuestra salsa picante"
+    },
+    price: 12.99,
+    type: 'food',
+    timeOfDay: 'all',
+    image: '/placeholder.svg?height=80&width=80',
+    ingredients: [
+      { id: 'hot-sauce', name: 'Hot Sauce', extraPrice: 1.00 },
+      { id: 'pickles', name: 'Pickles', extraPrice: 1.00 },
+      { id: 'coleslaw', name: 'Coleslaw', extraPrice: 1.00 }
+    ]
   },
-  { 
-    id: 2, 
-    name: { en: 'Avocado Toast', es: 'Tostada de Aguacate' }, 
-    price: 7.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'morning', 
-    ingredients: ['Avocado', 'Bread', 'Tomatoes', 'Feta Cheese', 'Olive Oil'], 
-    type: 'food' 
+  {
+    id: 2,
+    name: { 
+      en: "Southern Breakfast Platter",
+      es: "Plato de Desayuno del Sur"
+    },
+    description: { 
+      en: "Eggs, bacon, grits, and biscuit",
+      es: "Huevos, tocino, grits y bizcocho"
+    },
+    price: 14.99,
+    type: 'food',
+    timeOfDay: 'morning',
+    image: '/placeholder.svg?height=80&width=80',
+    ingredients: [
+      { id: 'eggs', name: 'Eggs', extraPrice: 1.00 },
+      { id: 'bacon', name: 'Bacon', extraPrice: 1.00 },
+      { id: 'grits', name: 'Grits', extraPrice: 1.00 },
+      { id: 'biscuit', name: 'Biscuit', extraPrice: 1.00 }
+    ]
   },
-  { 
-    id: 3, 
-    name: { en: 'Pancakes', es: 'Panqueques' }, 
-    price: 6.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'morning', 
-    ingredients: ['Flour', 'Eggs', 'Milk', 'Butter', 'Maple Syrup'], 
-    type: 'food' 
+  {
+    id: 3,
+    name: { 
+      en: "BBQ Pulled Pork Plate",
+      es: "Plato de Cerdo Desmechado con BBQ"
+    },
+    description: { 
+      en: "Slow-cooked pulled pork with BBQ sauce",
+      es: "Cerdo desmechado cocinado a fuego lento con salsa BBQ"
+    },
+    price: 15.99,
+    type: 'food',
+    timeOfDay: 'all',
+    image: '/placeholder.svg?height=80&width=80',
+    ingredients: [
+      { id: 'bbq-sauce', name: 'BBQ Sauce', extraPrice: 1.00 },
+      { id: 'coleslaw', name: 'Coleslaw', extraPrice: 1.00 },
+      { id: 'cornbread', name: 'Cornbread', extraPrice: 1.00 }
+    ]
   },
-  { 
-    id: 4, 
-    name: { en: 'French Toast', es: 'Pan Francés' }, 
-    price: 7.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'morning', 
-    ingredients: ['Bread', 'Eggs', 'Milk', 'Cinnamon', 'Vanilla'], 
-    type: 'food' 
+  {
+    id: 4,
+    name: { 
+      en: "Sweet Tea",
+      es: "Té Dulce"
+    },
+    description: { 
+      en: "Classic southern sweet tea",
+      es: "Té dulce clásico del sur"
+    },
+    price: 2.99,
+    type: 'drink',
+    timeOfDay: 'all',
+    image: '/placeholder.svg?height=80&width=80',
+    ingredients: [
+      { id: 'ice', name: 'Ice', extraPrice: 1.00 },
+      { id: 'lemon', name: 'Lemon', extraPrice: 1.00 }
+    ]
   },
-
-  // Night Menu Items
-  { 
-    id: 5, 
-    name: { en: 'Nashville Hot Chicken', es: 'Pollo Picante de Nashville' }, 
-    price: 12.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'night', 
-    ingredients: ['Chicken', 'Hot Spices', 'Pickles', 'Coleslaw', 'Ranch'], 
-    type: 'food' 
+  {
+    id: 5,
+    name: { 
+      en: "Chicken and Waffles",
+      es: "Pollo y Waffles"
+    },
+    description: { 
+      en: "Crispy fried chicken on top of fluffy waffles",
+      es: "Pollo frito crujiente sobre waffles esponjosos"
+    },
+    price: 16.99,
+    type: 'food',
+    timeOfDay: 'morning',
+    image: '/placeholder.svg?height=80&width=80',
+    ingredients: [
+      { id: 'syrup', name: 'Maple Syrup', extraPrice: 1.00 },
+      { id: 'butter', name: 'Whipped Butter', extraPrice: 1.00 },
+      { id: 'hot-sauce', name: 'Hot Sauce', extraPrice: 1.00 }
+    ]
   },
-  { 
-    id: 6, 
-    name: { en: 'BBQ Pulled Pork', es: 'Cerdo Desmenuzado BBQ' }, 
-    price: 11.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'night', 
-    ingredients: ['Pork', 'BBQ Sauce', 'Coleslaw', 'Pickles', 'Bun'], 
-    type: 'food' 
+  {
+    id: 6,
+    name: { 
+      en: "Nashville Hot Wings",
+      es: "Alitas Picantes de Nashville"
+    },
+    description: { 
+      en: "Crispy wings tossed in our signature hot sauce",
+      es: "Alitas crujientes bañadas en nuestra salsa picante"
+    },
+    price: 13.99,
+    type: 'food',
+    timeOfDay: 'all',
+    image: '/placeholder.svg?height=80&width=80',
+    ingredients: [
+      { id: 'ranch', name: 'Ranch Dressing', extraPrice: 1.00 },
+      { id: 'celery', name: 'Celery Sticks', extraPrice: 1.00 },
+      { id: 'carrots', name: 'Carrot Sticks', extraPrice: 1.00 }
+    ]
   },
-  { 
-    id: 7, 
-    name: { en: 'Southern Fried Catfish', es: 'Bagre Frito Sureño' }, 
-    price: 13.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'night', 
-    ingredients: ['Catfish', 'Cornmeal', 'Remoulade', 'Lemon', 'Herbs'], 
-    type: 'food' 
+  {
+    id: 7,
+    name: { 
+      en: "Mac and Cheese",
+      es: "Macarrones con Queso"
+    },
+    description: { 
+      en: "Creamy three-cheese blend with crispy breadcrumbs",
+      es: "Mezcla cremosa de tres quesos con pan rallado crujiente"
+    },
+    price: 8.99,
+    type: 'food',
+    timeOfDay: 'all',
+    image: '/placeholder.svg?height=80&width=80',
+    ingredients: [
+      { id: 'bacon', name: 'Bacon Bits', extraPrice: 1.00 },
+      { id: 'jalapenos', name: 'Jalapeños', extraPrice: 1.00 },
+      { id: 'breadcrumbs', name: 'Extra Breadcrumbs', extraPrice: 1.00 }
+    ]
   },
-
-  // Drinks (Can be ordered with either menu)
-  { 
-    id: 8, 
-    name: { en: 'Sweet Tea', es: 'Té Dulce' }, 
-    price: 2.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'all',  // Drinks can be ordered with either menu
-    type: 'drink' 
-  },
-  { 
-    id: 9, 
-    name: { en: 'Lemonade', es: 'Limonada' }, 
-    price: 2.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'all', 
-    type: 'drink' 
-  },
-  { 
-    id: 10, 
-    name: { en: 'Coffee', es: 'Café' }, 
-    price: 2.49, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'all', 
-    type: 'drink' 
-  },
-  { 
-    id: 11, 
-    name: { en: 'Craft Beer', es: 'Cerveza Artesanal' }, 
-    price: 5.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'all',  // Changed to 'all' since it can be ordered with any food
-    type: 'drink' 
-  },
-  { 
-    id: 12, 
-    name: { en: 'House Wine', es: 'Vino de la Casa' }, 
-    price: 6.99, 
-    image: '/placeholder.svg?height=80&width=80', 
-    timeOfDay: 'all',  // Changed to 'all' since it can be ordered with any food
-    type: 'drink' 
+  {
+    id: 8,
+    name: { 
+      en: "Fresh Lemonade",
+      es: "Limonada Fresca"
+    },
+    description: { 
+      en: "Freshly squeezed lemons with pure cane sugar",
+      es: "Limones recién exprimidos con azúcar de caña pura"
+    },
+    price: 3.99,
+    type: 'drink',
+    timeOfDay: 'all',
+    image: '/placeholder.svg?height=80&width=80',
+    ingredients: [
+      { id: 'mint', name: 'Fresh Mint', extraPrice: 1.00 },
+      { id: 'strawberry', name: 'Strawberry Puree', extraPrice: 1.00 }
+    ]
   }
 ]

@@ -42,7 +42,7 @@ export default function Menu() {
   }, [])
 
   const filteredItems = menuItems.filter(item => 
-    item.type === 'drink' || item.timeOfDay === (isNightMenu ? 'night' : 'morning')
+    item.type === 'drink' || item.timeOfDay === 'all' || item.timeOfDay === (isNightMenu ? 'night' : 'morning')
   )
 
   const findMatchingCartItem = (item: MenuItem, modifications: CartItemIngredient[] = []) => {
@@ -93,8 +93,14 @@ export default function Menu() {
       }
 
       const newCartItem: CartItem = {
-        ...item,
+        id: item.id,
         originalItemId: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        image: item.image,
+        timeOfDay: item.timeOfDay,
+        type: item.type,
         quantity: 1,
         ingredients: modifications.length > 0 ? modifications : undefined
       }
@@ -135,12 +141,29 @@ export default function Menu() {
       setCartItems(prev => [
         ...prev.filter(item => item !== cartItem),
         { ...cartItem, quantity: cartItem.quantity - 1 },
-        { ...cartItem, quantity: 1, ingredients: finalMods.length > 0 ? finalMods : undefined }
+        { 
+          ...cartItem, 
+          quantity: 1, 
+          ingredients: finalMods.length > 0 ? finalMods.map(mod => ({
+            id: typeof mod.name === 'string' ? mod.name : mod.name.id,
+            name: typeof mod.name === 'string' ? mod.name : mod.name.name,
+            modification: mod.modification,
+            extraPrice: typeof mod.name === 'string' ? 0 : mod.name.extraPrice
+          })) : undefined 
+        }
       ])
     } else {
       setCartItems(prev => prev.map(item => 
         item === cartItem 
-          ? { ...item, ingredients: finalMods.length > 0 ? finalMods : undefined }
+          ? { 
+              ...item, 
+              ingredients: finalMods.length > 0 ? finalMods.map(mod => ({
+                id: typeof mod.name === 'string' ? mod.name : mod.name.id,
+                name: typeof mod.name === 'string' ? mod.name : mod.name.name,
+                modification: mod.modification,
+                extraPrice: typeof mod.name === 'string' ? 0 : mod.name.extraPrice
+              })) : undefined 
+            }
           : item
       ))
     }
@@ -239,6 +262,14 @@ export default function Menu() {
         onPickupTimeChange={setSelectedPickupTime}
         onUpdateQuantity={handleUpdateQuantity}
         onIngredientModification={handleIngredientModification}
+        onRemoveItem={(id) => {
+          setCartItems(prev => prev.filter(item => item.id.toString() !== id))
+        }}
+        onUpdateItem={(id, updates) => {
+          setCartItems(prev => prev.map(item => 
+            item.id.toString() === id ? { ...item, ...updates } : item
+          ))
+        }}
         onClearCart={handleClearCart}
         onCheckout={handleCheckout}
       />

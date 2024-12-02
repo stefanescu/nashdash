@@ -8,15 +8,16 @@ interface IngredientSelectorProps {
   name: string
   modification: IngredientModification
   onClick: () => void
+  extraPrice?: number
   disabled?: boolean
   isNightMode?: boolean
 }
 
-function IngredientBadge({ name, modification, onClick, disabled, isNightMode }: IngredientSelectorProps) {
+function IngredientBadge({ name, modification, onClick, extraPrice, disabled, isNightMode }: IngredientSelectorProps) {
   const getVariant = () => {
     if (isNightMode) {
       switch (modification) {
-        case 'removed':
+        case 'no':
           return 'outline'
         case 'extra':
           return 'secondary'
@@ -25,7 +26,7 @@ function IngredientBadge({ name, modification, onClick, disabled, isNightMode }:
       }
     }
     switch (modification) {
-      case 'removed':
+      case 'no':
         return 'destructive'
       case 'extra':
         return 'secondary'
@@ -34,16 +35,23 @@ function IngredientBadge({ name, modification, onClick, disabled, isNightMode }:
     }
   }
 
+  const displayName = () => {
+    if (modification === 'extra' && extraPrice && extraPrice > 0) {
+      return `${name} (+$${extraPrice.toFixed(2)})`
+    }
+    return name
+  }
+
   return (
     <Badge
       variant={getVariant()}
       className={cn(
         "cursor-pointer transition-all duration-200",
         modification === 'extra' && "bg-green-600 hover:bg-green-700 ring-2 ring-green-500 ring-offset-1 shadow-sm",
-        modification === 'removed' && isNightMode && "border-red-800 text-red-300 hover:bg-red-900/50",
+        modification === 'no' && isNightMode && "border-red-800 text-red-300 hover:bg-red-900/50",
         disabled && "opacity-50 cursor-default",
         !disabled && "hover:opacity-80",
-        isNightMode && modification === 'regular' && "border-slate-700 text-slate-300",
+        isNightMode && modification === 'normal' && "border-slate-700 text-slate-300",
         isNightMode && modification === 'extra' && "ring-offset-slate-900 bg-green-700 hover:bg-green-800 ring-green-600"
       )}
       onClick={disabled ? undefined : onClick}
@@ -51,8 +59,8 @@ function IngredientBadge({ name, modification, onClick, disabled, isNightMode }:
       {modification === 'extra' && (
         <span className="mr-0.5 text-white font-bold">+</span>
       )}
-      {name}
-      {modification === 'removed' && (
+      {displayName()}
+      {modification === 'no' && (
         <span className="ml-0.5">✕</span>
       )}
     </Badge>
@@ -60,9 +68,9 @@ function IngredientBadge({ name, modification, onClick, disabled, isNightMode }:
 }
 
 interface IngredientListProps {
-  ingredients: string[]
+  ingredients: CartItemIngredient[]
   modifications?: CartItemIngredient[]
-  onModificationChange: (ingredient: string, modification: IngredientModification) => void
+  onModificationChange: (ingredient: CartItemIngredient, modification: IngredientModification) => void
   disabled?: boolean
   isNightMode?: boolean
 }
@@ -74,16 +82,16 @@ export function IngredientSelector({
   disabled,
   isNightMode
 }: IngredientListProps) {
-  const getModification = (ingredient: string): IngredientModification => {
-    return modifications.find(m => m.name === ingredient)?.modification || 'regular'
+  const getModification = (ingredient: CartItemIngredient): IngredientModification => {
+    return modifications.find(m => m.id === ingredient.id)?.modification || 'normal'
   }
 
-  const cycleModification = (ingredient: string) => {
+  const cycleModification = (ingredient: CartItemIngredient) => {
     const current = getModification(ingredient)
     const next: IngredientModification = 
-      current === 'regular' ? 'removed' :
-      current === 'removed' ? 'extra' :
-      'regular'
+      current === 'normal' ? 'no' :
+      current === 'no' ? 'extra' :
+      'normal'
     
     onModificationChange(ingredient, next)
   }
@@ -92,9 +100,10 @@ export function IngredientSelector({
     <div className="flex flex-wrap gap-1.5">
       {ingredients.map(ingredient => (
         <IngredientBadge
-          key={ingredient}
-          name={ingredient}
+          key={ingredient.id}
+          name={ingredient.name}
           modification={getModification(ingredient)}
+          extraPrice={ingredient.extraPrice}
           onClick={() => cycleModification(ingredient)}
           disabled={disabled}
           isNightMode={isNightMode}
