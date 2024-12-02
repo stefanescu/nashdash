@@ -6,13 +6,16 @@ import { Check, Trash2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
+import { format, isToday } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 interface OrderItem {
   id: number
   name: { en: string; es: string }
   price: number
   quantity: number
-  ingredients?: { [key: string]: 'regular' | 'remove' | 'extra' }
+  ingredients?: { id: string; name: string; modification: 'none' | 'light' | 'regular' | 'extra'; extraPrice?: number }[]
 }
 
 interface Order {
@@ -20,6 +23,8 @@ interface Order {
   items: OrderItem[]
   total: number
   timestamp: number
+  pickupTime: string
+  status: 'pending' | 'ready' | 'completed'
   language: 'en' | 'es'
 }
 
@@ -63,22 +68,62 @@ export default function Orders() {
     setOrders(updatedOrders)
   }
 
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp)
-    return date.toLocaleString(language === 'en' ? 'en-US' : 'es-ES', {
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: language === 'en'
-    })
+  const formatPickupDate = (dateStr: string, lang: 'en' | 'es') => {
+    try {
+      const date = new Date(dateStr)
+      if (isToday(date)) {
+        return lang === 'en' ? 'TODAY' : 'HOY'
+      }
+      return format(date, 'EEEE, MMMM d', {
+        locale: lang === 'es' ? es : undefined
+      })
+    } catch (error) {
+      return 'Invalid Date'
+    }
   }
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp)
-    return date.toLocaleDateString(language === 'en' ? 'en-US' : 'es-ES', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric'
-    })
+  const formatPickupTime = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr)
+      return format(date, 'h:mm a')
+    } catch (error) {
+      return 'Invalid Time'
+    }
+  }
+
+  const getStatusBadge = (status: Order['status'], language: 'en' | 'es') => {
+    const statusColors = {
+      pending: 'bg-yellow-500',
+      ready: 'bg-orange-500',
+      completed: 'bg-green-500'
+    }
+
+    const statusText = {
+      pending: language === 'en' ? 'Pending' : 'Pendiente',
+      ready: language === 'en' ? 'Ready' : 'Listo',
+      completed: language === 'en' ? 'Completed' : 'Completado'
+    }
+
+    return (
+      <Badge className={`${statusColors[status]} text-white`}>
+        {statusText[status]}
+      </Badge>
+    )
+  }
+
+  const formatIngredientModification = (modification: string) => {
+    switch (modification) {
+      case 'extra':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs px-2">+Extra</Badge>
+      case 'light':
+        return <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs px-2">-Light</Badge>
+      case 'none':
+        return <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs px-2">-None</Badge>
+      case 'regular':
+        return null
+      default:
+        return null
+    }
   }
 
   return (
@@ -89,77 +134,87 @@ export default function Orders() {
       exit={{ opacity: 0 }}
     >
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
+        <div className="flex items-center mb-6">
+          <Link href="/" className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back to Menu
           </Link>
-          <h1 className="text-2xl font-bold">
-            {language === 'en' ? 'Orders' : 'Pedidos'}
-          </h1>
-          <Button
-            variant="ghost"
-            onClick={() => setLanguage(prev => prev === 'en' ? 'es' : 'en')}
-          >
-            {language === 'en' ? 'ES' : 'EN'}
-          </Button>
+        </div>
+        
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Orders</h1>
+          <p className="text-muted-foreground">View and manage your orders</p>
         </div>
 
         {orders.length === 0 ? (
-          <Card className="text-center p-8">
-            <CardContent>
-              <p className="text-muted-foreground">
-                {language === 'en' 
-                  ? 'No orders to display'
-                  : 'No hay pedidos para mostrar'}
-              </p>
-            </CardContent>
+          <Card className="text-center p-6">
+            <p className="text-muted-foreground">No orders yet</p>
+            <Link href="/" className="text-primary hover:underline mt-2 block">
+              Place your first order
+            </Link>
           </Card>
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <Card key={order.id} className="overflow-hidden">
+              <Card key={order.id} className="relative">
                 <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>
-                      {formatDate(order.timestamp)}
-                    </span>
-                    <span className="text-sm font-normal text-muted-foreground">
-                      {formatTime(order.timestamp)}
-                    </span>
+                  <CardTitle>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="text-2xl font-bold">
+                          {formatPickupDate(order.pickupTime, language)}
+                        </div>
+                        <div className="text-lg text-primary">
+                          {formatPickupTime(order.pickupTime)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground mb-1">Total</div>
+                        <div className="text-xl font-bold">${order.total.toFixed(2)}</div>
+                      </div>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-2">
-                    {order.items.map((item, index) => (
-                      <li key={index} className="flex justify-between items-center">
-                        <div>
-                          <span className="font-medium">
-                            {item.quantity}x {item.name[order.language]}
-                          </span>
-                          {item.ingredients && Object.entries(item.ingredients).length > 0 && (
-                            <ul className="text-sm text-muted-foreground ml-4">
-                              {Object.entries(item.ingredients).map(([ingredient, state]) => (
-                                <li key={ingredient}>
-                                  {state === 'remove' && '- '}
-                                  {state === 'extra' && '+ '}
-                                  {ingredient}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
+                  <div className="space-y-4">
+                    {order.items.map((item, itemIndex) => (
+                      <div key={`${order.id}-${itemIndex}`} className="flex flex-col border-b pb-3 last:border-0">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="font-medium text-lg">
+                            {item.quantity}x {item.name[language]}
+                          </div>
+                          <div className="font-medium ml-4">
+                            ${(item.price * item.quantity).toFixed(2)}
+                          </div>
                         </div>
-                        <span>${(item.price * item.quantity).toFixed(2)}</span>
-                      </li>
+                        {item.ingredients && item.ingredients.length > 0 && (
+                          <div className="space-y-1.5 pl-4">
+                            {item.ingredients
+                              .filter(ing => ing.modification !== 'regular')
+                              .map((ing, index) => (
+                                <div key={`${order.id}-${itemIndex}-${index}`} 
+                                     className="flex items-center gap-2 text-sm text-muted-foreground"
+                                >
+                                  <span className="min-w-[120px]">{ing.name}</span>
+                                  {formatIngredientModification(ing.modification)}
+                                  {ing.extraPrice && ing.modification === 'extra' && (
+                                    <span className="text-xs text-muted-foreground">
+                                      (+${(ing.extraPrice * item.quantity).toFixed(2)})
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </CardContent>
-                <CardFooter className="flex justify-between items-center bg-muted/50">
-                  <span className="font-bold">
-                    {language === 'en' ? 'Total:' : 'Total:'} ${order.total.toFixed(2)}
-                  </span>
-                  <div className="space-x-2">
+                <CardFooter className="flex justify-between items-center pt-4">
+                  <div>
+                    {getStatusBadge(order.status, language)}
+                  </div>
+                  <div className="flex gap-2">
                     <Button
                       variant="destructive"
                       size="icon"
@@ -171,6 +226,7 @@ export default function Orders() {
                       variant="default"
                       size="icon"
                       onClick={() => handleAcceptOrder(order.id)}
+                      disabled={order.status !== 'pending'}
                     >
                       <Check className="h-4 w-4" />
                     </Button>

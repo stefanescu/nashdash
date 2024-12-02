@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { IngredientSelector } from './ingredient-selector'
 import { Plus, Minus, Coffee, UtensilsCrossed } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getThemeClass } from '@/app/styles/theme'
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -28,8 +29,8 @@ export function MenuItemCard({
     item.ingredients?.map(ing => ({
       id: ing.id,
       name: ing.name,
-      modification: 'regular',
-      extraPrice: ing.extraPrice
+      extraPrice: ing.extraPrice,
+      modification: 'regular'
     })) || []
   )
 
@@ -41,11 +42,10 @@ export function MenuItemCard({
   const ItemIcon = item.type === 'drink' ? Coffee : UtensilsCrossed
 
   return (
-    <Card className={cn(
-      "transition-colors duration-300 relative overflow-hidden",
-      isNightMode 
-        ? "bg-slate-800 text-slate-100 border-slate-700 hover:bg-slate-700" 
-        : "bg-white hover:bg-slate-50"
+    <Card className={getThemeClass(
+      "transition-colors duration-300 relative overflow-hidden bg-white hover:bg-slate-50",
+      isNightMode,
+      "night-mode night-mode-hover"
     )}>
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
@@ -56,72 +56,83 @@ export function MenuItemCard({
             )} />
             <span>{item.name.en}</span>
           </div>
-          <Badge variant={isNightMode ? "secondary" : "default"} className={cn(
-            isNightMode && "bg-slate-700 hover:bg-slate-600"
-          )}>
-            ${item.price.toFixed(2)}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold">${item.price.toFixed(2)}</span>
+            {quantity > 0 && (
+              <Badge variant={isNightMode ? "outline" : "secondary"} className={getThemeClass(
+                "",
+                isNightMode,
+                "night-mode-border text-slate-100"
+              )}>
+                {quantity}
+              </Badge>
+            )}
+          </div>
         </CardTitle>
-        {item.description && (
-          <p className={cn(
-            "text-sm",
-            isNightMode ? "text-slate-300" : "text-slate-600"
-          )}>{item.description.en}</p>
+        {item.description?.en && (
+          <p className={getThemeClass(
+            "text-sm text-slate-600",
+            isNightMode,
+            "text-slate-400"
+          )}>
+            {item.description.en}
+          </p>
         )}
       </CardHeader>
-      <CardContent>
-        {item.ingredients && (
-          <div className={cn(
-            "space-y-2",
-            isNightMode ? "text-slate-300" : "text-slate-600"
-          )}>
-            {item.ingredients.map(ing => (
-              <div key={ing.id} className="flex items-center gap-2 text-sm">
-                <span>{ing.name}</span>
-                <Badge variant="outline" className={cn(
-                  "ml-auto",
-                  isNightMode && "border-slate-600 text-slate-300"
-                )}>
-                  +${ing.extraPrice.toFixed(2)}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          {quantity > 0 && (
-            <>
-              <Button
-                variant={isNightMode ? "secondary" : "outline"}
-                size="icon"
-                className={cn(
-                  "h-8 w-8",
-                  isNightMode && "bg-slate-700 hover:bg-slate-600"
-                )}
-                onClick={() => onRemoveFromCart(item)}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className={cn(
-                "w-8 text-center",
-                isNightMode ? "text-slate-100" : "text-slate-900"
-              )}>{quantity}</span>
-            </>
-          )}
+      
+      {item.ingredients && (
+        <CardContent>
+          <IngredientSelector
+            ingredients={item.ingredients.map(ing => ({
+              ...ing,
+              modification: 'regular'
+            }))}
+            modifications={modifications}
+            onModificationChange={(ingredient, modification) => {
+              setModifications(prev => {
+                const existing = prev.find(mod => mod.id === ingredient.id);
+                if (existing) {
+                  return prev.map(mod => 
+                    mod.id === ingredient.id 
+                      ? { ...mod, modification }
+                      : mod
+                  );
+                }
+                return [...prev, { ...ingredient, modification }];
+              });
+            }}
+            isNightMode={isNightMode}
+          />
+        </CardContent>
+      )}
+
+      <CardFooter className="flex justify-end gap-2">
+        {quantity > 0 && (
           <Button
-            variant={isNightMode ? "secondary" : "outline"}
+            variant="outline"
             size="icon"
-            className={cn(
-              "h-8 w-8",
-              isNightMode && "bg-slate-700 hover:bg-slate-600"
+            className={getThemeClass(
+              "",
+              isNightMode,
+              "night-mode-border night-mode-hover"
             )}
-            onClick={handleAddToCart}
+            onClick={() => onRemoveFromCart(item)}
           >
-            <Plus className="h-4 w-4" />
+            <Minus className="h-4 w-4" />
           </Button>
-        </div>
+        )}
+        <Button
+          variant="outline"
+          size="icon"
+          className={getThemeClass(
+            "",
+            isNightMode,
+            "night-mode-border night-mode-hover"
+          )}
+          onClick={handleAddToCart}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </CardFooter>
     </Card>
   )

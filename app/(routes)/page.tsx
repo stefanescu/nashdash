@@ -8,12 +8,13 @@ import { CartButton } from '@/app/components/cart-button'
 import { CartSheet } from '@/app/components/cart-sheet'
 import { MenuItemCard } from '@/app/components/menu-item-card'
 import { useToast } from "@/hooks/use-toast"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { cn } from '@/lib/utils'
 import { AuthButton } from '@/app/components/auth-button'
 import { OrdersButton } from '@/app/components/orders-button'
 import { useSession } from 'next-auth/react'
+import { getThemeClass } from '@/app/styles/theme'
+import { Toaster } from "@/components/ui/toaster"
 
 export default function Menu() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
@@ -25,253 +26,235 @@ export default function Menu() {
 
   // Set initial menu based on current time
   useEffect(() => {
-    const now = new Date()
-    const currentHour = now.getHours()
-    const currentMinute = now.getMinutes()
+    const checkTime = () => {
+      const now = new Date()
+      const currentHour = now.getHours()
+      const currentMinute = now.getMinutes()
 
-    // Morning menu: 8 AM to 12:45 PM
-    // Night menu: 5 PM to 7:30 PM
-    const isMorningTime = (currentHour >= 8 && currentHour < 12) || 
-                         (currentHour === 12 && currentMinute <= 45)
-    const isNightTime = (currentHour >= 17 && currentHour < 19) || 
-                       (currentHour === 19 && currentMinute <= 30)
+      // Morning menu: 8 AM to 12:45 PM
+      // Night menu: 5 PM to 7:30 PM
+      const isMorningTime = (currentHour >= 8 && currentHour < 12) || 
+                           (currentHour === 12 && currentMinute <= 45)
+      const isNightTime = (currentHour >= 17 && currentHour < 19) || 
+                         (currentHour === 19 && currentMinute <= 30)
 
-    // If we're in morning hours, set to morning menu
-    // If we're in night hours or past morning hours, set to night menu
-    setIsNightMenu(!isMorningTime)
+      setIsNightMenu(!isMorningTime)
+    }
+
+    checkTime()
+    const interval = setInterval(checkTime, 60000) // Check every minute
+    return () => clearInterval(interval)
   }, [])
 
   const filteredItems = menuItems.filter(item => 
     item.type === 'drink' || item.timeOfDay === 'all' || item.timeOfDay === (isNightMenu ? 'night' : 'morning')
   )
 
-  const findMatchingCartItem = (item: MenuItem, modifications: CartItemIngredient[] = []) => {
-    return cartItems.find(cartItem => {
-      if (cartItem.originalItemId !== item.id) return false
-      
-      const cartMods = cartItem.ingredients || []
-      if (cartMods.length !== modifications.length) return false
-      
-      return modifications.every(mod => 
-        cartMods.some(cartMod => 
-          cartMod.name === mod.name && 
-          cartMod.modification === mod.modification
-        )
-      )
-    })
-  }
-
-  const getItemQuantity = (itemId: number) => {
-    return cartItems.reduce((total, item) => {
-      if (item.originalItemId === itemId) {
-        return total + item.quantity
-      }
-      return total
-    }, 0)
+  const getItemQuantity = (item: MenuItem) => {
+    return cartItems.reduce((total, cartItem) => 
+      cartItem.originalItemId === item.id ? total + cartItem.quantity : total
+    , 0)
   }
 
   const handleAddToCart = (item: MenuItem, modifications: CartItemIngredient[] = []) => {
-    setCartItems(prev => {
-      // Check if we're trying to mix morning and night food items
-      if (item.type === 'food' && item.timeOfDay !== 'all') {
-        const existingFoodType = prev.find(i => i.type === 'food')?.timeOfDay
-        if (existingFoodType && existingFoodType !== item.timeOfDay) {
-          toast({
-            variant: "destructive",
-            title: "Cannot mix menu items",
-            description: "You cannot mix breakfast and dinner items in the same order."
-          })
-          return prev
-        }
-      }
-
-      const existing = findMatchingCartItem(item, modifications)
-      if (existing) {
-        return prev.map(i => 
-          i === existing ? { ...i, quantity: i.quantity + 1 } : i
-        )
-      }
-
-      const newCartItem: CartItem = {
-        id: item.id,
-        originalItemId: item.id,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        image: item.image,
-        timeOfDay: item.timeOfDay,
-        type: item.type,
-        quantity: 1,
-        ingredients: modifications.length > 0 ? modifications : undefined
-      }
-      return [...prev, newCartItem]
-    })
-  }
-
-  const handleUpdateQuantity = (cartItem: CartItem, delta: number) => {
-    setCartItems(prev => {
-      const newItems = prev.map(item => {
-        if (item === cartItem) {
-          const newQuantity = item.quantity + delta
-          return newQuantity > 0 ? { ...item, quantity: newQuantity } : null
-        }
-        return item
-      }).filter((item): item is CartItem => item !== null)
-
-      return newItems.length > 0 ? newItems : []
-    })
-  }
-
-  const handleIngredientModification = (cartItem: CartItem, ingredient: string, modification: IngredientModification) => {
-    const baseItem = menuItems.find(item => item.id === cartItem.originalItemId)!
-    const currentMods = cartItem.ingredients || baseItem.ingredients?.map(ing => ({ 
-      name: ing, 
-      modification: 'regular' 
-    })) || []
-
-    const newMods = currentMods.map(mod => 
-      mod.name === ingredient ? { ...mod, modification } : mod
-    )
-
-    // If all modifications are 'regular', remove modifications array
-    const finalMods = newMods.every(mod => mod.modification === 'regular') ? [] : newMods
-
-    // If quantity > 1, split the item
-    if (cartItem.quantity > 1) {
-      setCartItems(prev => [
-        ...prev.filter(item => item !== cartItem),
-        { ...cartItem, quantity: cartItem.quantity - 1 },
-        { 
-          ...cartItem, 
-          quantity: 1, 
-          ingredients: finalMods.length > 0 ? finalMods.map(mod => ({
-            id: typeof mod.name === 'string' ? mod.name : mod.name.id,
-            name: typeof mod.name === 'string' ? mod.name : mod.name.name,
-            modification: mod.modification,
-            extraPrice: typeof mod.name === 'string' ? 0 : mod.name.extraPrice
-          })) : undefined 
-        }
-      ])
-    } else {
-      setCartItems(prev => prev.map(item => 
-        item === cartItem 
-          ? { 
-              ...item, 
-              ingredients: finalMods.length > 0 ? finalMods.map(mod => ({
-                id: typeof mod.name === 'string' ? mod.name : mod.name.id,
-                name: typeof mod.name === 'string' ? mod.name : mod.name.name,
-                modification: mod.modification,
-                extraPrice: typeof mod.name === 'string' ? 0 : mod.name.extraPrice
-              })) : undefined 
-            }
-          : item
-      ))
+    const newItem: CartItem = {
+      id: Date.now(),
+      originalItemId: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+      ingredients: modifications,
+      extraPrice: modifications.reduce((total, mod) => 
+        mod.modification === 'extra' && mod.extraPrice ? total + mod.extraPrice : total
+      , 0),
+      image: item.image,
+      type: item.type,
+      timeOfDay: item.timeOfDay
     }
+    setCartItems(prev => [...prev, newItem])
+    toast({
+      title: "Added to cart",
+      description: `${item.name.en} has been added to your cart.`
+    })
+  }
+
+  const handleRemoveFromCart = (item: MenuItem) => {
+    const existingItem = cartItems.find(i => 
+      i.originalItemId === item.id && !i.ingredients?.length
+    )
+    if (existingItem) {
+      handleUpdateQuantity(existingItem, -1)
+    }
+  }
+
+  const handleUpdateQuantity = (item: CartItem, delta: number) => {
+    setCartItems(prev => prev.map(cartItem => {
+      if (cartItem.id === item.id) {
+        const newQuantity = Math.max(0, cartItem.quantity + delta)
+        return newQuantity === 0 ? null : { ...cartItem, quantity: newQuantity }
+      }
+      return cartItem
+    }).filter(Boolean) as CartItem[])
+  }
+
+  const handleIngredientModification = (
+    item: CartItem,
+    ingredientId: string,
+    modification: IngredientModification
+  ) => {
+    setCartItems(prev => prev.map(cartItem => {
+      if (cartItem.id === item.id) {
+        const ingredients = cartItem.ingredients?.map(ing => 
+          ing.id === ingredientId ? { ...ing, modification } : ing
+        )
+        return { ...cartItem, ingredients }
+      }
+      return cartItem
+    }))
+  }
+
+  const handleRemoveItem = (id: string) => {
+    setCartItems(prev => prev.filter(item => item.id.toString() !== id))
+  }
+
+  const handleUpdateItem = (id: string, updates: Partial<CartItem>) => {
+    setCartItems(prev => prev.map(item => 
+      item.id.toString() === id ? { ...item, ...updates } : item
+    ))
   }
 
   const handleClearCart = () => {
     setCartItems([])
-    setIsCartOpen(false)
+    setSelectedPickupTime('')
   }
 
   const handleCheckout = () => {
     if (!selectedPickupTime) {
       toast({
-        variant: "destructive",
-        title: "Pickup Time Required",
-        description: "Please select a pickup time for your order."
+        title: "Select pickup time",
+        description: "Please select a pickup time before checking out.",
+        variant: "destructive"
       })
       return
     }
 
-    // Create a new order object
-    const newOrder = {
-      id: crypto.randomUUID(),
-      items: cartItems,
-      total: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      timestamp: Date.now(),
-      pickupTime: selectedPickupTime,
-      language: 'en' as const,
-      userName: session?.user?.name || undefined,
-      userEmail: session?.user?.email || undefined
+    try {
+      // Calculate total with modifications
+      const total = cartItems.reduce((sum, item) => {
+        const basePrice = item.price * item.quantity
+        const extraPrice = item.ingredients?.reduce((total, ing) => 
+          ing.modification === 'extra' && ing.extraPrice ? total + (ing.extraPrice * item.quantity) : total
+        , 0) || 0
+        return sum + basePrice + extraPrice
+      }, 0)
+
+      // Create new order
+      const newOrder = {
+        id: Date.now().toString(),
+        items: cartItems,
+        total,
+        timestamp: Date.now(),
+        pickupTime: selectedPickupTime,
+        status: 'pending',
+        language: 'en'
+      }
+
+      // Save to localStorage
+      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]')
+      localStorage.setItem('orders', JSON.stringify([newOrder, ...existingOrders]))
+
+      // Format time for display
+      const pickupDate = new Date(selectedPickupTime)
+      const timeDisplay = pickupDate.toLocaleTimeString([], { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      })
+      const dateDisplay = pickupDate.toLocaleDateString([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      })
+
+      toast({
+        title: "Order placed!",
+        description: `Your order will be ready for pickup on ${dateDisplay} at ${timeDisplay}.`,
+      })
+      
+      setCartItems([])
+      setIsCartOpen(false)
+      setSelectedPickupTime('')
+    } catch (error) {
+      console.error('Error during checkout:', error)
+      toast({
+        title: "Error placing order",
+        description: "There was a problem processing your order. Please try again.",
+        variant: "destructive"
+      })
     }
-
-    // Get existing orders and add the new one
-    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]')
-    localStorage.setItem('orders', JSON.stringify([...existingOrders, newOrder]))
-
-    toast({
-      title: "Order Placed!",
-      description: `Your order will be ready for pickup at ${selectedPickupTime}.`
-    })
-    handleClearCart()
-    setSelectedPickupTime('')
   }
 
   return (
-    <div className={cn(
-      "container mx-auto p-4 min-h-screen transition-colors duration-300",
-      isNightMenu ? "bg-slate-800" : "bg-white"
+    <div className={getThemeClass(
+      "min-h-screen transition-colors duration-300",
+      isNightMenu,
+      "night-mode"
     )}>
-      <header className={cn(
-        "text-center mb-8",
-        isNightMenu ? "text-slate-100" : "text-slate-900"
+      <Toaster className="top-1/2 -translate-y-1/2" />
+      <header className={getThemeClass(
+        "sticky top-0 z-40 w-full border-b bg-white",
+        isNightMenu,
+        "night-mode night-mode-border"
       )}>
-        <h1 className="text-3xl font-bold mb-6">NashDash</h1>
-        <MenuToggle 
-          isNightMenu={isNightMenu} 
-          onToggle={setIsNightMenu} 
-        />
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-6">
+            <h1 className={getThemeClass(
+              "text-2xl font-bold",
+              isNightMenu,
+              "text-slate-100"
+            )}>NashDash</h1>
+            <MenuToggle isNightMenu={isNightMenu} onToggle={setIsNightMenu} />
+          </div>
+          <div className="flex items-center gap-2">
+            <OrdersButton isNightMode={isNightMenu} />
+            <AuthButton isNightMode={isNightMenu} />
+            <CartButton 
+              items={cartItems} 
+              onClick={() => setIsCartOpen(true)} 
+              isNightMode={isNightMenu}
+            />
+          </div>
+        </div>
       </header>
 
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-        <OrdersButton isNightMode={isNightMenu} />
-        <AuthButton />
-        <CartButton 
-          items={cartItems} 
-          onClick={() => setIsCartOpen(true)} 
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredItems.map((item) => (
-          <MenuItemCard
-            key={item.id}
-            item={item}
-            quantity={getItemQuantity(item.id)}
-            isNightMode={isNightMenu}
-            onAddToCart={handleAddToCart}
-            onRemoveFromCart={(item) => {
-              const existingItem = cartItems.find(i => 
-                i.originalItemId === item.id && !i.ingredients
-              )
-              if (existingItem) {
-                handleUpdateQuantity(existingItem, -1)
-              }
-            }}
-          />
-        ))}
-      </div>
+      <main className="container py-8">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredItems.map((item) => (
+            <MenuItemCard
+              key={item.id}
+              item={item}
+              quantity={getItemQuantity(item)}
+              onAddToCart={handleAddToCart}
+              onRemoveFromCart={handleRemoveFromCart}
+              isNightMode={isNightMenu}
+            />
+          ))}
+        </div>
+      </main>
 
       <CartSheet
         isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
         items={cartItems}
+        onClose={() => setIsCartOpen(false)}
+        onRemoveItem={handleRemoveItem}
+        onUpdateItem={handleUpdateItem}
+        onClearCart={handleClearCart}
+        onCheckout={handleCheckout}
         isNightMode={isNightMenu}
         selectedPickupTime={selectedPickupTime}
         onPickupTimeChange={setSelectedPickupTime}
         onUpdateQuantity={handleUpdateQuantity}
         onIngredientModification={handleIngredientModification}
-        onRemoveItem={(id) => {
-          setCartItems(prev => prev.filter(item => item.id.toString() !== id))
-        }}
-        onUpdateItem={(id, updates) => {
-          setCartItems(prev => prev.map(item => 
-            item.id.toString() === id ? { ...item, ...updates } : item
-          ))
-        }}
-        onClearCart={handleClearCart}
-        onCheckout={handleCheckout}
       />
     </div>
   )

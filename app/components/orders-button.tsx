@@ -3,7 +3,7 @@
 import { ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { getThemeClass } from '@/app/styles/theme'
 
 export function OrdersButton({ isNightMode }: { isNightMode?: boolean }) {
   return (
@@ -11,9 +11,10 @@ export function OrdersButton({ isNightMode }: { isNightMode?: boolean }) {
       <Button 
         variant="ghost" 
         size="sm"
-        className={cn(
+        className={getThemeClass(
           "text-sm font-medium gap-2",
-          isNightMode ? "text-slate-100 hover:text-slate-100 hover:bg-slate-800" : ""
+          isNightMode,
+          "text-slate-100 hover:text-slate-100 hover:bg-slate-800"
         )}
       >
         <ClipboardList className="h-4 w-4" />

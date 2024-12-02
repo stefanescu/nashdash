@@ -98,8 +98,8 @@ export function IngredientSelector({
   const cycleModification = (ingredient: CartItemIngredient) => {
     const current = getModification(ingredient)
     const next: IngredientModification = 
-      current === 'regular' ? 'removed' :
-      current === 'removed' ? 'extra' :
+      current === 'regular' ? 'extra' :
+      current === 'extra' ? 'removed' :
       'regular'
     
     onModificationChange(ingredient, next)

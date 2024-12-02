@@ -96,56 +96,65 @@ export function TimePicker({ isNightMenu, selectedTime, onChange }: TimePickerPr
     onChange('') // Reset time when day changes
   }
 
+  const handleTimeSelect = (time: string) => {
+    if (!selectedDay) return
+
+    // Parse the time string (e.g., "3:30 PM")
+    const [timePart, meridiem] = time.split(' ')
+    const [hours, minutes] = timePart.split(':')
+    let hour = parseInt(hours)
+    
+    // Convert to 24-hour format
+    if (meridiem === 'PM' && hour !== 12) hour += 12
+    if (meridiem === 'AM' && hour === 12) hour = 0
+
+    // Create a new date with the selected day and time
+    const date = new Date(selectedDay)
+    date.setHours(hour)
+    date.setMinutes(parseInt(minutes))
+    date.setSeconds(0)
+    date.setMilliseconds(0)
+    
+    onChange(date.toISOString())
+  }
+
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-sm font-medium mb-2 block">Select Day:</label>
-        <Select 
+        <Select
           value={selectedDay ? format(selectedDay, 'yyyy-MM-dd') : ''}
           onValueChange={handleDaySelect}
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select day" />
+          <SelectTrigger>
+            <SelectValue placeholder="Select pickup day" />
           </SelectTrigger>
           <SelectContent>
             {availableDays.map((day) => (
-              <SelectItem 
-                key={format(day, 'yyyy-MM-dd')} 
-                value={format(day, 'yyyy-MM-dd')}
-              >
-                {format(day, 'EEEE, MMM d')}
-                {format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') && ' (Today)'}
+              <SelectItem key={format(day, 'yyyy-MM-dd')} value={format(day, 'yyyy-MM-dd')}>
+                {format(day, 'EEEE, MMMM d')}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {selectedDay && (
+      {selectedDay && availableTimes.length > 0 && (
         <div>
-          <label className="text-sm font-medium mb-2 block">Select Time:</label>
-          {availableTimes.length > 0 ? (
-            <Select value={selectedTime} onValueChange={onChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select pickup time" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableTimes.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <div className="text-sm text-muted-foreground">
-              {isFriday(selectedDay) 
-                ? "Friday pickup is available from 8:00 AM to 11:30 AM only"
-                : isNightMenu 
-                  ? "Dinner pickup is available from 5:00 PM to 7:30 PM"
-                  : "Breakfast pickup is available from 8:00 AM to 12:45 PM"}
-            </div>
-          )}
+          <Select
+            value={selectedTime}
+            onValueChange={handleTimeSelect}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select pickup time" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableTimes.map((time) => (
+                <SelectItem key={time} value={time}>
+                  {time}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
     </div>

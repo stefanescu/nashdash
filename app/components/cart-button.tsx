@@ -9,9 +9,10 @@ import { cn } from '@/lib/utils'
 interface CartButtonProps {
   items: CartItem[]
   onClick: () => void
+  isNightMode?: boolean
 }
 
-export function CartButton({ items, onClick }: CartButtonProps) {
+export function CartButton({ items, onClick, isNightMode }: CartButtonProps) {
   const [isAnimating, setIsAnimating] = useState(false)
   const [animationType, setAnimationType] = useState<'add' | 'remove' | null>(null)
   const [prevCount, setPrevCount] = useState(0)
@@ -38,7 +39,8 @@ export function CartButton({ items, onClick }: CartButtonProps) {
       className={cn(
         "relative transition-colors duration-300",
         isAnimating && animationType === 'add' && "bg-green-600 hover:bg-green-700",
-        isAnimating && animationType === 'remove' && "bg-red-600 hover:bg-red-700"
+        isAnimating && animationType === 'remove' && "bg-red-600 hover:bg-red-700",
+        isNightMode && "night-mode-border night-mode-hover"
       )}
     >
       <ShoppingCart className="h-6 w-6" />
