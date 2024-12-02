@@ -12,6 +12,7 @@ import { CartItem, MenuItem, IngredientModification } from '@/app/types/menu'
 import { Badge } from '@/components/ui/badge'
 import { Trash2, Plus, Minus } from 'lucide-react'
 import { IngredientSelector } from './ingredient-selector'
+import { TimePicker } from './time-picker'
 import { menuItems } from '@/app/lib/menu-data'
 import { cn } from '@/lib/utils'
 
@@ -20,6 +21,8 @@ interface CartSheetProps {
   onClose: () => void
   items: CartItem[]
   isNightMode?: boolean
+  selectedPickupTime: string
+  onPickupTimeChange: (time: string) => void
   onUpdateQuantity: (item: CartItem, delta: number) => void
   onIngredientModification: (item: CartItem, ingredient: string, modification: IngredientModification) => void
   onClearCart: () => void
@@ -31,6 +34,8 @@ export function CartSheet({
   onClose,
   items,
   isNightMode,
+  selectedPickupTime,
+  onPickupTimeChange,
   onUpdateQuantity,
   onIngredientModification,
   onClearCart,
@@ -132,6 +137,19 @@ export function CartSheet({
                 isNightMode && "text-slate-100"
               )}>${total.toFixed(2)}</span>
             </div>
+            {items.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <span className={cn(
+                  "text-sm font-medium",
+                  isNightMode && "text-slate-300"
+                )}>Select Pickup Time:</span>
+                <TimePicker
+                  isNightMenu={!!isNightMode}
+                  selectedTime={selectedPickupTime}
+                  onChange={onPickupTimeChange}
+                />
+              </div>
+            )}
             <div className="flex gap-2">
               <Button
                 variant="outline"

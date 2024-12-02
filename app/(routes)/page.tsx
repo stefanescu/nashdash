@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MenuItem, CartItem, CartItemIngredient, IngredientModification } from '@/app/types/menu'
 import { menuItems } from '@/app/lib/menu-data'
 import { MenuToggle } from '@/app/components/menu-toggle'
@@ -19,8 +19,27 @@ export default function Menu() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isNightMenu, setIsNightMenu] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [selectedPickupTime, setSelectedPickupTime] = useState<string>('')
   const { toast } = useToast()
   const { data: session } = useSession()
+
+  // Set initial menu based on current time
+  useEffect(() => {
+    const now = new Date()
+    const currentHour = now.getHours()
+    const currentMinute = now.getMinutes()
+
+    // Morning menu: 8 AM to 12:45 PM
+    // Night menu: 5 PM to 7:30 PM
+    const isMorningTime = (currentHour >= 8 && currentHour < 12) || 
+                         (currentHour === 12 && currentMinute <= 45)
+    const isNightTime = (currentHour >= 17 && currentHour < 19) || 
+                       (currentHour === 19 && currentMinute <= 30)
+
+    // If we're in morning hours, set to morning menu
+    // If we're in night hours or past morning hours, set to night menu
+    setIsNightMenu(!isMorningTime)
+  }, [])
 
   const filteredItems = menuItems.filter(item => 
     item.type === 'drink' || item.timeOfDay === (isNightMenu ? 'night' : 'morning')
@@ -133,12 +152,22 @@ export default function Menu() {
   }
 
   const handleCheckout = () => {
+    if (!selectedPickupTime) {
+      toast({
+        variant: "destructive",
+        title: "Pickup Time Required",
+        description: "Please select a pickup time for your order."
+      })
+      return
+    }
+
     // Create a new order object
     const newOrder = {
       id: crypto.randomUUID(),
       items: cartItems,
       total: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
       timestamp: Date.now(),
+      pickupTime: selectedPickupTime,
       language: 'en' as const,
       userName: session?.user?.name || undefined,
       userEmail: session?.user?.email || undefined
@@ -150,9 +179,10 @@ export default function Menu() {
 
     toast({
       title: "Order Placed!",
-      description: "Your order has been successfully placed."
+      description: `Your order will be ready for pickup at ${selectedPickupTime}.`
     })
     handleClearCart()
+    setSelectedPickupTime('')
   }
 
   return (
@@ -205,6 +235,8 @@ export default function Menu() {
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
         isNightMode={isNightMenu}
+        selectedPickupTime={selectedPickupTime}
+        onPickupTimeChange={setSelectedPickupTime}
         onUpdateQuantity={handleUpdateQuantity}
         onIngredientModification={handleIngredientModification}
         onClearCart={handleClearCart}
