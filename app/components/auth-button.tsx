@@ -50,10 +50,11 @@ export function AuthButton() {
   return (
     <Button 
       variant="ghost" 
-      size="icon"
-      onClick={() => signIn('google')}
+      size="sm"
+      className="text-sm font-medium"
+      onClick={() => signIn()}
     >
-      <UserCircle2 className="h-5 w-5" />
+      Login
     </Button>
   )
 }

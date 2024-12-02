@@ -211,11 +211,11 @@ export default function Menu() {
   return (
     <div className={cn(
       "container mx-auto p-4 min-h-screen transition-colors duration-300",
-      isNightMenu && "bg-slate-950"
+      isNightMenu ? "bg-slate-800" : "bg-white"
     )}>
       <header className={cn(
         "text-center mb-8",
-        isNightMenu && "text-slate-100"
+        isNightMenu ? "text-slate-100" : "text-slate-900"
       )}>
         <h1 className="text-3xl font-bold mb-6">NashDash</h1>
         <MenuToggle 
@@ -225,8 +225,8 @@ export default function Menu() {
       </header>
 
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <OrdersButton isNightMode={isNightMenu} />
         <AuthButton />
-        <OrdersButton />
         <CartButton 
           items={cartItems} 
           onClick={() => setIsCartOpen(true)} 

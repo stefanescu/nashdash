@@ -17,21 +17,21 @@ function IngredientBadge({ name, modification, onClick, extraPrice, disabled, is
   const getVariant = () => {
     if (isNightMode) {
       switch (modification) {
-        case 'no':
+        case 'regular':
           return 'outline'
+        case 'removed':
+          return 'destructive'
         case 'extra':
           return 'secondary'
-        default:
-          return 'outline'
       }
     }
     switch (modification) {
-      case 'no':
+      case 'regular':
+        return 'outline'
+      case 'removed':
         return 'destructive'
       case 'extra':
         return 'secondary'
-      default:
-        return 'outline'
     }
   }
 
@@ -47,12 +47,21 @@ function IngredientBadge({ name, modification, onClick, extraPrice, disabled, is
       variant={getVariant()}
       className={cn(
         "cursor-pointer transition-all duration-200",
-        modification === 'extra' && "bg-green-600 hover:bg-green-700 ring-2 ring-green-500 ring-offset-1 shadow-sm",
-        modification === 'no' && isNightMode && "border-red-800 text-red-300 hover:bg-red-900/50",
-        disabled && "opacity-50 cursor-default",
-        !disabled && "hover:opacity-80",
-        isNightMode && modification === 'normal' && "border-slate-700 text-slate-300",
-        isNightMode && modification === 'extra' && "ring-offset-slate-900 bg-green-700 hover:bg-green-800 ring-green-600"
+        isNightMode ? (
+          modification === 'extra' 
+            ? "bg-amber-600 hover:bg-amber-700 border-amber-500 text-slate-100"
+            : modification === 'removed'
+            ? "bg-red-900 hover:bg-red-800 border-red-700 text-slate-100"
+            : "bg-slate-700 hover:bg-slate-600 border-slate-600 text-slate-300"
+        ) : (
+          modification === 'extra'
+            ? "bg-green-600 hover:bg-green-700 text-white"
+            : modification === 'removed'
+            ? "bg-red-600 hover:bg-red-700"
+            : "hover:bg-slate-100"
+        ),
+        disabled && "opacity-50 cursor-not-allowed",
+        !disabled && "hover:opacity-80"
       )}
       onClick={disabled ? undefined : onClick}
     >
@@ -60,7 +69,7 @@ function IngredientBadge({ name, modification, onClick, extraPrice, disabled, is
         <span className="mr-0.5 text-white font-bold">+</span>
       )}
       {displayName()}
-      {modification === 'no' && (
+      {modification === 'removed' && (
         <span className="ml-0.5">✕</span>
       )}
     </Badge>
@@ -83,15 +92,15 @@ export function IngredientSelector({
   isNightMode
 }: IngredientListProps) {
   const getModification = (ingredient: CartItemIngredient): IngredientModification => {
-    return modifications.find(m => m.id === ingredient.id)?.modification || 'normal'
+    return modifications.find(m => m.id === ingredient.id)?.modification || 'regular'
   }
 
   const cycleModification = (ingredient: CartItemIngredient) => {
     const current = getModification(ingredient)
     const next: IngredientModification = 
-      current === 'normal' ? 'no' :
-      current === 'no' ? 'extra' :
-      'normal'
+      current === 'regular' ? 'removed' :
+      current === 'removed' ? 'extra' :
+      'regular'
     
     onModificationChange(ingredient, next)
   }

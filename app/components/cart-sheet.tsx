@@ -79,14 +79,14 @@ const CartItem: React.FC<CartItemProps> = ({
           <div className="flex justify-between">
             <span className={cn(
               "font-medium",
-              isNightMode && "text-slate-200"
+              isNightMode ? "text-slate-100" : "text-slate-900"
             )}>{data.name.en}</span>
             <Button
               variant="ghost"
               size="icon"
               className={cn(
                 "h-8 w-8",
-                isNightMode && "text-slate-400 hover:text-slate-300 hover:bg-slate-800"
+                isNightMode ? "text-slate-400 hover:text-slate-300 hover:bg-slate-800" : ""
               )}
               onClick={() => onRemove(data.id.toString())}
             >
@@ -95,7 +95,7 @@ const CartItem: React.FC<CartItemProps> = ({
           </div>
           <p className={cn(
             "text-sm text-muted-foreground",
-            isNightMode && "text-slate-400"
+            isNightMode ? "text-slate-400" : ""
           )}>
             ${data.price.toFixed(2)} x {data.quantity} = ${(data.price * data.quantity).toFixed(2)}
             {data.extraPrice ? ` + $${data.extraPrice.toFixed(2)}` : ''}
@@ -108,7 +108,7 @@ const CartItem: React.FC<CartItemProps> = ({
           size="icon"
           className={cn(
             "h-8 w-8",
-            isNightMode && "border-slate-700 bg-slate-800 hover:bg-slate-700"
+            isNightMode ? "border-slate-700 hover:bg-slate-800 text-slate-100" : ""
           )}
           onClick={() => handleQuantityChange(Math.max(1, data.quantity - 1))}
           disabled={data.quantity <= 1}
@@ -116,15 +116,15 @@ const CartItem: React.FC<CartItemProps> = ({
           <Minus className="h-4 w-4" />
         </Button>
         <span className={cn(
-          "text-center w-8",
-          isNightMode && "text-slate-300"
+          "w-8 text-center",
+          isNightMode ? "text-slate-100" : ""
         )}>{data.quantity}</span>
         <Button
           variant="outline"
           size="icon"
           className={cn(
             "h-8 w-8",
-            isNightMode && "border-slate-700 bg-slate-800 hover:bg-slate-700"
+            isNightMode ? "border-slate-700 hover:bg-slate-800 text-slate-100" : ""
           )}
           onClick={() => handleQuantityChange(data.quantity + 1)}
         >
@@ -151,7 +151,7 @@ const CartItem: React.FC<CartItemProps> = ({
       )}
       <Separator className={cn(
         "my-2",
-        isNightMode && "bg-slate-700"
+        isNightMode ? "bg-slate-700" : ""
       )} />
     </div>
   )
@@ -184,13 +184,13 @@ export function CartSheet({
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className={cn(
-        "w-full sm:max-w-lg",
-        isNightMode && "bg-slate-900 border-slate-700"
+        "w-[400px] sm:max-w-[540px]",
+        isNightMode ? "bg-slate-900 text-slate-100" : "bg-white"
       )}>
         <SheetHeader>
           <SheetTitle className={cn(
-            isNightMode && "text-slate-200"
-          )}>Cart</SheetTitle>
+            isNightMode ? "text-slate-100" : "text-slate-900"
+          )}>Your Cart</SheetTitle>
         </SheetHeader>
         <div className="mt-8">
           <ScrollArea className="h-[calc(100vh-280px)]">
@@ -206,23 +206,23 @@ export function CartSheet({
           </ScrollArea>
           <div className="space-y-4 mt-4">
             <Separator className={cn(
-              isNightMode && "bg-slate-700"
+              isNightMode ? "bg-slate-700" : ""
             )} />
             <div className="flex items-center justify-between">
               <span className={cn(
                 "font-semibold",
-                isNightMode && "text-slate-200"
+                isNightMode ? "text-slate-100" : "text-slate-900"
               )}>Total</span>
               <span className={cn(
                 "font-semibold",
-                isNightMode && "text-slate-200"
+                isNightMode ? "text-slate-100" : "text-slate-900"
               )}>${total.toFixed(2)}</span>
             </div>
             <div className="flex flex-col gap-2">
               <Button
                 onClick={onCheckout}
                 className={cn(
-                  isNightMode && "bg-green-700 hover:bg-green-800"
+                  isNightMode ? "bg-green-700 hover:bg-green-800" : ""
                 )}
               >
                 Checkout
@@ -231,7 +231,7 @@ export function CartSheet({
                 variant="outline"
                 onClick={onClearCart}
                 className={cn(
-                  isNightMode && "border-slate-700 bg-slate-800 hover:bg-slate-700"
+                  isNightMode ? "border-slate-700 bg-slate-800 hover:bg-slate-700" : ""
                 )}
               >
                 Clear Cart
