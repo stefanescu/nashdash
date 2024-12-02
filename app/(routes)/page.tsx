@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from '@/lib/utils'
+import { AuthButton } from '@/app/components/auth-button'
 
 export default function Menu() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
@@ -165,7 +166,8 @@ export default function Menu() {
         />
       </header>
 
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <AuthButton />
         <CartButton 
           items={cartItems} 
           onClick={() => setIsCartOpen(true)} 
