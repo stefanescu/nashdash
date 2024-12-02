@@ -10,6 +10,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useToast } from "@/hooks/use-toast"
+import Link from 'next/link'
 
 interface MenuItem {
   id: number
@@ -53,6 +55,15 @@ type IngredientState = 'regular' | 'remove' | 'extra'
 export default function Menu() {
   const [language, setLanguage] = useState<'en' | 'es'>('en')
   const [showSplash, setShowSplash] = useState(true)
+  const { toast } = useToast()
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasVisited = sessionStorage.getItem('hasVisited') === 'true'
+      setShowSplash(!hasVisited)
+    }
+  }, [])
+
   const [timeOfDay, setTimeOfDay] = useState<'morning' | 'night'>('morning')
   const [showDrinks, setShowDrinks] = useState(false)
   const [quantities, setQuantities] = useState<{ [key: number]: number }>({})
@@ -65,9 +76,19 @@ export default function Menu() {
   const controls = useAnimation()
   const totalRef = useRef<HTMLSpanElement>(null)
 
+  const cartItems = Object.entries(quantities).filter(([_, quantity]) => quantity > 0)
+  const totalItems = cartItems.reduce((sum, [_, quantity]) => sum + quantity, 0)
+  const totalPrice = cartItems.reduce((sum, [id, quantity]) => {
+    const item = menuItems.find(item => item.id === parseInt(id))!
+    return sum + item.price * quantity
+  }, 0)
+
   const handleLanguageSelect = (selectedLanguage: 'en' | 'es') => {
     setLanguage(selectedLanguage)
     setShowSplash(false)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('hasVisited', 'true')
+    }
   }
 
   const updateQuantity = (id: number, delta: number) => {
@@ -95,14 +116,6 @@ export default function Menu() {
       const item = menuItems.find(item => item.id === parseInt(id))
       return item?.type === 'drink' ? sum + quantity : sum
     }, 0)
-
-    if ((item.type === 'food' && foodCount + delta > 2) || (item.type === 'drink' && drinkCount + delta > 2)) {
-      setErrorMessage(language === 'en'
-        ? `You can only order up to 2 ${item.type}s per order.`
-        : `Solo puedes pedir hasta 2 ${item.type === 'food' ? 'comidas' : 'bebidas'} por pedido.`
-      )
-      return
-    }
 
     setQuantities((prev) => {
       const newQuantity = Math.max(0, Math.min((prev[id] || 0) + delta, 10))
@@ -147,13 +160,6 @@ export default function Menu() {
     }
   }
 
-  const cartItems = Object.entries(quantities).filter(([_, quantity]) => quantity > 0)
-  const totalItems = cartItems.reduce((sum, [_, quantity]) => sum + quantity, 0)
-  const totalPrice = cartItems.reduce((sum, [id, quantity]) => {
-    const item = menuItems.find(item => item.id === parseInt(id))
-    return sum + (item ? item.price * quantity : 0)
-  }, 0)
-
   const cycleIngredientState = (itemId: number, ingredient: string) => {
     const key = `${itemId}-${ingredient}`
     setIngredientStates((prev) => {
@@ -172,6 +178,62 @@ export default function Menu() {
   const handleCheckout = () => {
     if (totalItems > 0) {
       setShowCheckout(true)
+    }
+  }
+
+  const submitOrder = () => {
+    if (typeof window === 'undefined') return;
+
+    const order = {
+      id: Date.now().toString(),
+      items: cartItems.map(([id, quantity]) => {
+        const item = menuItems.find(item => item.id === parseInt(id))!
+        return {
+          id: parseInt(id),
+          name: item.name,
+          price: item.price,
+          quantity,
+          ingredients: Object.entries(ingredientStates)
+            .filter(([key]) => key.startsWith(`${id}-`))
+            .reduce((acc: { [key: string]: IngredientState }, [key, state]) => {
+              const ingredient = key.split('-')[1]
+              acc[ingredient] = state
+              return acc
+            }, {})
+        }
+      }),
+      total: totalPrice,
+      timestamp: Date.now(),
+      language
+    }
+
+    try {
+      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]')
+      localStorage.setItem('orders', JSON.stringify([...existingOrders, order]))
+      
+      // Reset cart and close modal
+      setQuantities({})
+      setIngredientStates({})
+      setShowCheckout(false)
+
+      // Show success toast
+      toast({
+        title: language === 'en' ? 'Order Sent!' : '¡Pedido Enviado!',
+        description: language === 'en' 
+          ? 'Your order has been sent to the kitchen.'
+          : 'Tu pedido ha sido enviado a la cocina.',
+        duration: 3000
+      })
+    } catch (error) {
+      console.error('Error saving order:', error)
+      toast({
+        variant: "destructive",
+        title: language === 'en' ? 'Error' : 'Error',
+        description: language === 'en'
+          ? 'Failed to send order. Please try again.'
+          : 'Error al enviar el pedido. Por favor, inténtalo de nuevo.',
+        duration: 3000
+      })
     }
   }
 
@@ -394,56 +456,39 @@ export default function Menu() {
       onDragEnd={handleDragEnd}
     >
       <div className="max-w-4xl mx-auto">
-        <motion.div
-          className={`sticky top-0 z-10 flex items-center justify-between p-4 mb-4 rounded-lg shadow-md ${
-            timeOfDay === 'night' ? 'bg-gray-800' : 'bg-white'
-          }`}
-          initial={{ y: -50 }}
-          animate={{ y: 0 }}
-          transition={{ type: "spring", stiffness: 120 }}
-        >
-          <h1 className="text-2xl font-bold">{language === 'en' ? 'Menu' : 'Menú'}</h1>
-          <div className="flex flex-col items-center">
-            <Utensils className={`h-5 w-5 mb-1 ${!showDrinks ? 'text-primary' : 'text-muted-foreground'}`} />
-            <Switch
-              id="drinks-toggle"
-              checked={showDrinks}
-              onCheckedChange={setShowDrinks}
-            />
-            <Beer className={`h-5 w-5 mt-1 ${showDrinks ? 'text-primary' : 'text-muted-foreground'}`} />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className={`text-xs ${timeOfDay === 'morning' ? 'text-yellow-500 font-bold' : ''}`}>7am-1pm</span>
+        <div className="flex items-center justify-between px-4 py-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center space-x-2">
             <Button
-              size="icon"
               variant="ghost"
+              size="icon"
               onClick={() => setTimeOfDay(timeOfDay === 'morning' ? 'night' : 'morning')}
             >
-              {timeOfDay === 'morning' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {timeOfDay === 'morning' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
             </Button>
+            <span className={`text-xs ${timeOfDay === 'morning' ? 'text-yellow-500 font-bold' : ''}`}>7am-11am</span>
             <span className={`text-xs ${timeOfDay === 'night' ? 'text-blue-500 font-bold' : ''}`}>5pm-7pm</span>
           </div>
-          <div className="flex flex-col items-center">
+          <div className="flex items-center space-x-2">
             <Button
-              size="icon"
-              variant="ghost"
+              variant="outline"
+              className="flex gap-2 items-center"
               onClick={handleCheckout}
-              disabled={totalItems === 0}
-              className={totalItems > 0 ? 'text-blue-500' : ''}
             >
-              <ShoppingCart className="h-6 w-6" />
+              <ShoppingCart className="h-5 w-5" />
+              {totalItems > 0 && (
+                <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-sm">
+                  {totalItems}
+                </span>
+              )}
             </Button>
-            <span
-              ref={totalRef}
-              className={`text-sm font-semibold mt-1 transition-all duration-300 ${
-                flashColor === 'green' ? 'text-green-500' :
-                flashColor === 'red' ? 'text-red-500' : ''
-              }`}
-            >
-              ${totalPrice.toFixed(2)}
-            </span>
+            <Link href="/orders">
+              <Button variant="outline" className="flex gap-2 items-center">
+                <ArrowLeft className="h-5 w-5" />
+                {language === 'en' ? 'Admin' : 'Admin'}
+              </Button>
+            </Link>
           </div>
-        </motion.div>
+        </div>
 
         <LanguageButtons />
 
@@ -458,7 +503,7 @@ export default function Menu() {
           {showDrinks ? (
             <motion.div
               key="drinks"
-              className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4 rounded-lg ${
+              className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4 rounded-lg shadow-md ${
                 timeOfDay === 'night' ? 'bg-gray-800' : 'bg-white'
               }`}
               initial={{ opacity: 0, y: 20 }}
@@ -587,48 +632,115 @@ export default function Menu() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      <AnimatePresence>
-        {enlargedImage && (
-          <motion.div
-            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setEnlargedImage(null)}
-          >
-            <motion.img
-              src={enlargedImage}
-              alt="Enlarged view"
-              className="max-w-full max-h-full object-contain"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            />
-            <Button
-              className="absolute top-4 right-4"
-              size="icon"
-              variant="ghost"
+        <AnimatePresence>
+          {showCheckout && (
+            <motion.div
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCheckout(false)}
+            >
+              <motion.div
+                className="bg-card max-w-md w-full p-6 rounded-lg shadow-xl"
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-2xl font-bold mb-4">
+                  {language === 'en' ? 'Review Order' : 'Revisar Pedido'}
+                </h2>
+                <div className="space-y-4">
+                  {cartItems.map(([id, quantity]) => {
+                    const item = menuItems.find(item => item.id === parseInt(id))
+                    const itemTotal = item.price * quantity
+                    return (
+                      <div key={id} className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">{quantity}x {item.name[language]}</div>
+                          {item.ingredients && Object.entries(ingredientStates)
+                            .filter(([key]) => key.startsWith(`${id}-`))
+                            .map(([key, state]) => {
+                              const ingredient = key.split('-')[1]
+                              return (
+                                <div key={key} className="text-sm text-muted-foreground ml-4">
+                                  {state === 'remove' && '- '}
+                                  {state === 'extra' && '+ '}
+                                  {ingredient}
+                                </div>
+                              )
+                            })}
+                        </div>
+                        <div className="font-medium">${itemTotal.toFixed(2)}</div>
+                      </div>
+                    )
+                  })}
+                  <div className="border-t pt-4 flex justify-between items-center font-bold">
+                    <span>{language === 'en' ? 'Total' : 'Total'}</span>
+                    <span>${totalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowCheckout(false)}
+                  >
+                    {language === 'en' ? 'Cancel' : 'Cancelar'}
+                  </Button>
+                  <Button
+                    onClick={submitOrder}
+                  >
+                    {language === 'en' ? 'Place Order' : 'Realizar Pedido'}
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {enlargedImage && (
+            <motion.div
+              className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setEnlargedImage(null)}
             >
-              <X className="h-6 w-6" />
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <motion.img
+                src={enlargedImage}
+                alt="Enlarged view"
+                className="max-w-full max-h-full object-contain"
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.8 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              />
+              <Button
+                className="absolute top-4 right-4"
+                size="icon"
+                variant="ghost"
+                onClick={() => setEnlargedImage(null)}
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center space-x-2">
-        {styleOptions.map((style, index) => (
-          <Button
-            key={style.name}
-            size="sm"
-            variant="outline"
-            className={`w-8 h-8 rounded-full ${style.menu.split(' ')[1]}`}
-            onClick={() => setCurrentStyle(index)}
-          />
-        ))}
+        <div className="fixed bottom-4 left-0 right-0 flex justify-center space-x-2">
+          {styleOptions.map((style, index) => (
+            <Button
+              key={style.name}
+              size="sm"
+              variant="outline"
+              className={`w-8 h-8 rounded-full ${style.menu.split(' ')[1]}`}
+              onClick={() => setCurrentStyle(index)}
+            />
+          ))}
+        </div>
       </div>
     </motion.div>
   )
