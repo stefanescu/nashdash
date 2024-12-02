@@ -12,12 +12,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from '@/lib/utils'
 import { AuthButton } from '@/app/components/auth-button'
+import { OrdersButton } from '@/app/components/orders-button'
+import { useSession } from 'next-auth/react'
 
 export default function Menu() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isNightMenu, setIsNightMenu] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { toast } = useToast()
+  const { data: session } = useSession()
 
   const filteredItems = menuItems.filter(item => 
     item.type === 'drink' || item.timeOfDay === (isNightMenu ? 'night' : 'morning')
@@ -136,7 +139,9 @@ export default function Menu() {
       items: cartItems,
       total: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
       timestamp: Date.now(),
-      language: 'en' as const
+      language: 'en' as const,
+      userName: session?.user?.name || undefined,
+      userEmail: session?.user?.email || undefined
     }
 
     // Get existing orders and add the new one
@@ -168,6 +173,7 @@ export default function Menu() {
 
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
         <AuthButton />
+        <OrdersButton />
         <CartButton 
           items={cartItems} 
           onClick={() => setIsCartOpen(true)} 
