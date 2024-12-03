@@ -50,162 +50,139 @@ export function CartSheet({
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className={getThemeClass(
-        "w-full sm:max-w-lg",
+        "w-full sm:max-w-lg p-4 pt-8",
         isNightMode,
         "night-mode"
       )}>
         <SheetHeader>
           <SheetTitle className={getThemeClass(
-            "text-2xl font-semibold",
+            "text-xl font-semibold md:text-2xl",
             isNightMode,
             "text-slate-100"
           )}>Your Cart</SheetTitle>
         </SheetHeader>
         
-        <div className="mt-8 space-y-4">
+        <div className="mt-6 space-y-4">
           {items.length > 0 ? (
             <>
-              <ScrollArea className="h-[45vh] pr-4">
-                <div className="space-y-2">
+              <ScrollArea className="h-[calc(100vh-280px)] md:h-[45vh] pr-4">
+                <div className="space-y-3">
                   {items.map((item) => (
                     <div 
                       key={item.id}
-                      className="flex justify-between items-start border-b pb-3 last:border-0"
+                      className="flex flex-col border-b pb-3 last:border-0"
                     >
-                      <div className="space-y-2 flex-1">
-                        <div className="flex justify-between items-start">
-                          <div className="font-medium text-lg">
-                            {item.quantity}x {item.name.en}
-                          </div>
-                          <div className="font-medium ml-4">
-                            ${(item.price * item.quantity).toFixed(2)}
-                          </div>
+                      <div className="flex justify-between items-start">
+                        <div className="font-medium text-base md:text-lg">
+                          {item.quantity}x {item.name.en}
                         </div>
-                        {item.ingredients && item.ingredients.length > 0 && (
-                          <div className="space-y-1 pl-4">
-                            {item.ingredients.map((ing) => (
-                              <div key={ing.id} className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                  {ing.name}
-                                  {ing.modification === 'extra' && ing.extraPrice && (
-                                    <span className="text-xs ml-1">
-                                      (+${ing.extraPrice.toFixed(2)})
-                                    </span>
-                                  )}
-                                </span>
-                                <Select
-                                  value={ing.modification}
-                                  onValueChange={(value: IngredientModification) => 
-                                    onIngredientModification(item, ing.id, value)
-                                  }
-                                >
-                                  <SelectTrigger className="h-7 w-24">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="regular">Regular</SelectItem>
-                                    <SelectItem value="removed">None</SelectItem>
-                                    <SelectItem value="extra">Extra</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between pt-1">
-                          <div className="flex items-center space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => onUpdateQuantity(item, -1)}
-                            >
-                              -
-                            </Button>
-                            <span className={getThemeClass(
-                              "min-w-8 text-center",
-                              isNightMode,
-                              "text-slate-100"
-                            )}>{item.quantity}</span>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => onUpdateQuantity(item, 1)}
-                            >
-                              +
-                            </Button>
-                          </div>
-                          <Button
-                            variant="ghost"
+                        <div className="font-medium text-base md:text-lg ml-4">
+                          ${(item.price * item.quantity).toFixed(2)}
+                        </div>
+                      </div>
+                      {item.ingredients && item.ingredients.length > 0 && (
+                        <div className="space-y-2 pl-4 mt-2">
+                          {item.ingredients.map((ing) => (
+                            <div key={ing.id} className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">
+                                {ing.name}
+                                {ing.modification === 'extra' && ing.extraPrice && (
+                                  <span className="text-xs ml-1">
+                                    (+${ing.extraPrice.toFixed(2)})
+                                  </span>
+                                )}
+                              </span>
+                              <Select
+                                value={ing.modification}
+                                onValueChange={(value: IngredientModification) => 
+                                  onIngredientModification(item, ing.id, value)
+                                }
+                              >
+                                <SelectTrigger className="h-7 w-24">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="regular">Regular</SelectItem>
+                                  <SelectItem value="removed">None</SelectItem>
+                                  <SelectItem value="extra">Extra</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-1.5">
+                          <Button 
+                            variant="outline" 
                             size="sm"
-                            onClick={() => onRemoveItem(item.id.toString())}
-                            className="text-red-500 hover:text-red-600"
+                            className="h-7 w-7 p-0"
+                            onClick={() => onUpdateQuantity(item, -1)}
                           >
-                            Remove
+                            -
+                          </Button>
+                          <span className={getThemeClass(
+                            "min-w-[24px] text-center text-sm",
+                            isNightMode,
+                            "text-slate-100"
+                          )}>{item.quantity}</span>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => onUpdateQuantity(item, 1)}
+                          >
+                            +
                           </Button>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onRemoveItem(item.id.toString())}
+                          className="text-red-500 hover:text-red-600 text-xs h-7"
+                        >
+                          Remove
+                        </Button>
                       </div>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
 
-              <div className="space-y-3 pt-2">
-                <Separator />
+              <div className="space-y-4 pt-4 border-t">
+                <TimePicker
+                  isNightMenu={isNightMode}
+                  selectedTime={selectedPickupTime}
+                  onChange={onPickupTimeChange}
+                />
                 
-                <div>
-                  <label className={getThemeClass(
-                    "text-sm font-medium block mb-1",
-                    isNightMode,
-                    "text-slate-100"
-                  )}>
-                    Select Pickup Time
-                  </label>
-                  <TimePicker
-                    isNightMenu={isNightMode}
-                    selectedTime={selectedPickupTime}
-                    onChange={onPickupTimeChange}
-                  />
+                <div className="flex items-center justify-between py-2">
+                  <span className="font-semibold text-base md:text-lg">Total</span>
+                  <span className="font-bold text-lg md:text-xl">${total.toFixed(2)}</span>
                 </div>
 
-                <div className="flex items-center justify-between font-medium">
-                  <span className={getThemeClass(
-                    "text-lg",
-                    isNightMode,
-                    "text-slate-100"
-                  )}>Total:</span>
-                  <span className={getThemeClass(
-                    "text-lg",
-                    isNightMode,
-                    "text-slate-100"
-                  )}>${total.toFixed(2)}</span>
-                </div>
-
-                <div className="flex space-x-2 pt-1">
-                  <Button 
-                    variant="outline" 
-                    onClick={onClearCart}
-                    className={getThemeClass(
-                      "",
-                      isNightMode,
-                      "night-mode-border night-mode-hover"
-                    )}
-                  >
-                    Clear Cart
-                  </Button>
+                <div className="flex flex-col gap-2">
                   <Button 
                     onClick={onCheckout}
+                    className="w-full"
                     disabled={!selectedPickupTime}
-                    className="flex-1"
                   >
                     Checkout
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={onClearCart}
+                    className="w-full"
+                  >
+                    Clear Cart
                   </Button>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex h-[60vh] items-center justify-center">
+            <div className="text-center py-8">
               <p className={getThemeClass(
-                "text-center text-gray-500",
+                "text-muted-foreground text-sm md:text-base",
                 isNightMode,
                 "text-slate-400"
               )}>Your cart is empty</p>

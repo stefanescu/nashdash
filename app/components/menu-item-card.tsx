@@ -43,24 +43,24 @@ export function MenuItemCard({
 
   return (
     <Card className={getThemeClass(
-      "transition-colors duration-300 relative overflow-hidden bg-white hover:bg-slate-50",
+      "transition-all duration-300 relative overflow-hidden bg-white hover:bg-slate-50 hover:shadow-md",
       isNightMode,
       "night-mode night-mode-hover"
     )}>
-      <CardHeader>
-        <CardTitle className="flex justify-between items-center">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex justify-between items-start">
           <div className="flex items-center gap-2">
             <ItemIcon className={cn(
               "h-5 w-5",
               isNightMode ? "text-amber-400" : "text-slate-600"
             )} />
-            <span>{item.name.en}</span>
+            <span className="text-base font-semibold md:text-lg">{item.name.en}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold">${item.price.toFixed(2)}</span>
+            <span className="text-base font-bold md:text-lg">${item.price.toFixed(2)}</span>
             {quantity > 0 && (
               <Badge variant={isNightMode ? "outline" : "secondary"} className={getThemeClass(
-                "",
+                "text-xs",
                 isNightMode,
                 "night-mode-border text-slate-100"
               )}>
@@ -71,7 +71,7 @@ export function MenuItemCard({
         </CardTitle>
         {item.description?.en && (
           <p className={getThemeClass(
-            "text-sm text-slate-600",
+            "text-xs md:text-sm text-slate-600 line-clamp-2",
             isNightMode,
             "text-slate-400"
           )}>
@@ -81,7 +81,7 @@ export function MenuItemCard({
       </CardHeader>
       
       {item.ingredients && (
-        <CardContent>
+        <CardContent className="pt-0">
           <IngredientSelector
             ingredients={item.ingredients.map(ing => ({
               ...ing,
@@ -106,13 +106,13 @@ export function MenuItemCard({
         </CardContent>
       )}
 
-      <CardFooter className="flex justify-end gap-2">
+      <CardFooter className="flex justify-end gap-1.5 pt-2">
         {quantity > 0 && (
           <Button
             variant="outline"
             size="icon"
             className={getThemeClass(
-              "",
+              "h-8 w-8",
               isNightMode,
               "night-mode-border night-mode-hover"
             )}
@@ -125,7 +125,7 @@ export function MenuItemCard({
           variant="outline"
           size="icon"
           className={getThemeClass(
-            "",
+            "h-8 w-8",
             isNightMode,
             "night-mode-border night-mode-hover"
           )}

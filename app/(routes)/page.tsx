@@ -200,22 +200,22 @@ export default function Menu() {
       isNightMenu,
       "night-mode"
     )}>
-      <Toaster className="top-1/2 -translate-y-1/2" />
+      <Toaster />
       <header className={getThemeClass(
-        "sticky top-0 z-40 w-full border-b bg-white",
+        "sticky top-0 z-40 w-full border-b backdrop-blur-sm bg-white/80",
         isNightMenu,
-        "night-mode night-mode-border"
+        "night-mode night-mode-border bg-slate-900/80"
       )}>
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-6">
+        <div className="container flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-4">
             <h1 className={getThemeClass(
-              "text-2xl font-bold",
+              "text-xl font-bold md:text-2xl",
               isNightMenu,
               "text-slate-100"
             )}>NashDash</h1>
             <MenuToggle isNightMenu={isNightMenu} onToggle={setIsNightMenu} />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2">
             <OrdersButton isNightMode={isNightMenu} />
             <AuthButton isNightMode={isNightMenu} />
             <CartButton 
@@ -227,8 +227,8 @@ export default function Menu() {
         </div>
       </header>
 
-      <main className="container py-8">
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <main className="container py-4 px-4 md:py-8">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredItems.map((item) => (
             <MenuItemCard
               key={item.id}
