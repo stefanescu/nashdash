@@ -10,21 +10,19 @@ interface MenuToggleProps {
 
 export function MenuToggle({ isNightMenu, onToggle }: MenuToggleProps) {
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-1.5 px-4 py-2">
       <div className="flex items-center gap-2">
-        <Sun className="h-4 w-4" />
+        <Sun className={`h-4 w-4 ${!isNightMenu ? 'text-yellow-500' : 'text-muted-foreground'}`} />
         <Switch
           checked={isNightMenu}
           onCheckedChange={onToggle}
+          className="data-[state=checked]:bg-indigo-500"
         />
-        <Moon className="h-4 w-4" />
+        <Moon className={`h-4 w-4 ${isNightMenu ? 'text-indigo-500' : 'text-muted-foreground'}`} />
       </div>
-      <div className="text-sm text-muted-foreground">
-        {isNightMenu ? (
-          <span>Dinner Menu • 5:00 PM - 7:30 PM</span>
-        ) : (
-          <span>Breakfast Menu • 8:00 AM - 12:45 PM</span>
-        )}
+      <div className="flex flex-col items-center text-[10px] text-muted-foreground">
+        <span>{isNightMenu ? 'Night' : 'Breakfast'}</span>
+        <span>{isNightMenu ? '5pm-7pm' : '7am-1pm'}</span>
       </div>
     </div>
   )

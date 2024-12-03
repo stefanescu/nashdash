@@ -1,10 +1,7 @@
 'use client'
 
-import { ShoppingCart } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { CartItem } from '@/app/types/menu'
-import { useEffect, useState } from 'react'
-import { cn } from '@/lib/utils'
+import { useState, useEffect } from 'react'
 
 interface CartButtonProps {
   items: CartItem[]
@@ -13,42 +10,18 @@ interface CartButtonProps {
 }
 
 export function CartButton({ items, onClick, isNightMode }: CartButtonProps) {
-  const [isAnimating, setIsAnimating] = useState(false)
-  const [animationType, setAnimationType] = useState<'add' | 'remove' | null>(null)
-  const [prevCount, setPrevCount] = useState(0)
-
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
-
-  useEffect(() => {
-    if (totalItems !== prevCount) {
-      setIsAnimating(true)
-      setAnimationType(totalItems > prevCount ? 'add' : 'remove')
-      const timer = setTimeout(() => {
-        setIsAnimating(false)
-        setAnimationType(null)
-      }, 300)
-      setPrevCount(totalItems)
-      return () => clearTimeout(timer)
-    }
-  }, [totalItems, prevCount])
+  const totalPrice = items.reduce((sum, item) => sum + (item.price + item.extraPrice) * item.quantity, 0)
 
   return (
-    <Button
-      size="lg"
+    <button
       onClick={onClick}
-      className={cn(
-        "relative transition-colors duration-300",
-        isAnimating && animationType === 'add' && "bg-green-600 hover:bg-green-700",
-        isAnimating && animationType === 'remove' && "bg-red-600 hover:bg-red-700",
-        isNightMode && "night-mode-border night-mode-hover"
-      )}
+      className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-accent/50 transition-colors"
     >
-      <ShoppingCart className="h-6 w-6" />
-      {totalItems > 0 && (
-        <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
-          {totalItems}
-        </span>
-      )}
-    </Button>
+      <span className="text-sm font-medium">${totalPrice.toFixed(2)}</span>
+      <div className="text-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+      </div>
+    </button>
   )
 }
